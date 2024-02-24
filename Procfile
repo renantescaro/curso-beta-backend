@@ -1,3 +1,3 @@
 buildpack: heroku/nodejs
-build: cd backend && npm install
-web: cd backend && npm start
+build: npm install
+web: npm start
