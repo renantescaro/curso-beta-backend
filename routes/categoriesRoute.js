@@ -54,7 +54,7 @@ router.put('/', (req, res) => {
     const id = req.query.id;
     const { name, description } = req.body;
 
-    const query = 'UPDATE categories SET name = $1 description = $2 WHERE id = $3 RETURNING *';
+    const query = 'UPDATE categories SET name = $1, description = $2 WHERE id = $3 RETURNING *';
     const values = [name, description, id];
 
     client.query(query, values)
