@@ -54,6 +54,10 @@ router.put('/', (req, res) => {
     const id = req.query.id;
     const { title, brand, description } = req.body;
 
+    if (!id) {
+        return res.status(400).json({ error: 'id não recebido!' });
+    }
+
     const query = 'UPDATE products SET title = $1, brand = $2, description = $3 WHERE id = $4 RETURNING *';
     const values = [title, brand, description, id];
 
@@ -71,23 +75,31 @@ router.put('/', (req, res) => {
         });
 });
 
-router.delete('/', (req, res) => {
+router.delete('/', async (req, res) => {
     const productId = req.query.id;
-    const query = 'DELETE FROM products WHERE id = $1 RETURNING *';
-    const values = [productId];
 
-    client.query(query, values)
-        .then(result => {
-            if (result.rows.length === 0) {
-                res.status(404).json({ error: 'Produto não encontrado' });
-            } else {
-                res.json(result.rows[0]);
-            }
-        })
-        .catch(err => {
-            console.error('Erro ao excluir produto:', err);
-            res.status(500).json({ error: 'Erro ao excluir produto' });
-        });
+    if (!productId) {
+        return res.status(400).json({ error: 'productId não recebido!' });
+    }
+
+    try {
+        await client.query('DELETE FROM products_categories WHERE product_id = $1', [productId]);
+
+        const query = 'DELETE FROM products WHERE id = $1 RETURNING *';
+        const values = [productId];
+
+        const result = await client.query(query, values);
+
+        if (result.rows.length === 0) {
+            res.status(404).json({ error: 'Produto não encontrado' });
+        } else {
+            res.json(result.rows[0]);
+        }
+
+    } catch (error) {
+        console.error('Erro ao excluir produto:', error);
+        res.status(500).json({ error: 'Erro ao excluir produto' });
+    }
 });
 
 module.exports = router;
